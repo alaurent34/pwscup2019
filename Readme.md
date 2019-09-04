@@ -17,7 +17,7 @@ Note that traj_dist package must be installed [here](https://github.com/djjavo/t
 ## Usage
 
 1. Download PWSCup data from the team Google Drive account
-1. (bis) You can also download testing data [here](https://www.iwsec.org/pws/2019/data/PubInfo_20190828.zip)
+1. (bis) You can also download testing data [here](https://cloud.ikb.info.uqam.ca/index.php/s/T3FmdLRmbi2C9Bk)
 2. Preprocessing of the data with `preprocessing.py`
 
 ```shell
