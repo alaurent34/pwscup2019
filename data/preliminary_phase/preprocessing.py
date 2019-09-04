@@ -62,8 +62,8 @@ def main():
     cell_traj_scnd_d = cell_traj[:, one_day_time:]
     logger.debug("Cells trajectories extracted")
 
-    cell_traj_first_d.dump(f"{args.output}/cell_traj_d1.npy")
-    cell_traj_scnd_d.dump(f"{args.output}/cell_traj_d2.npy")
+    np.save(arr=cell_traj_first_d, file=f"{args.output}/cell_traj_d1.npy")
+    np.save(arr=cell_traj_scnd_d, file=f"{args.output}/cell_traj_d2.npy")
     logger.info("Cells trajectories saved")
 
     #recover trajectories as lat, lng
@@ -74,8 +74,8 @@ def main():
     lat_lng_traj_scnd_d = lat_lng_traj[:, one_day_time:]
     logger.debug("Lat, Lng trajectories extracted")
 
-    lat_lng_traj_first_d.dump(f"{args.output}/lat_lng_traj_d1.npy")
-    lat_lng_traj_scnd_d.dump(f"{args.output}/lat_lng_traj_d2.npy")
+    np.save(arr=lat_lng_traj_first_d, file=f"{args.output}/lat_lng_traj_d1.npy")
+    np.save(arr=lat_lng_traj_scnd_d, file=f"{args.output}/lat_lng_traj_d2.npy")
     logger.info("Lat, Lng trajectories saved")
 
     logger.info("Preprocessing done")
