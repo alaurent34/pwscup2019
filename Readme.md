@@ -17,9 +17,18 @@ Note that traj_dist package must be installed [here](https://github.com/djjavo/t
 ## Usage
 
 1. Download PWSCup data from the team Google Drive account
-1. (bis) You can also download testing data [here](https://cloud.ikb.info.uqam.ca/index.php/s/T3FmdLRmbi2C9Bk)
-2. Preprocessing of the data with `preprocessing.py`
+1(bis). You can also download testing data [here](https://cloud.ikb.info.uqam.ca/index.php/s/T3FmdLRmbi2C9Bk)
 
+2. Preprocessing of the data with `preprocessing.py`
 ```shell
 preprocessing.py -i <your_trajectory_input_file> -o <name_of_directory_for_output> -r <information_region_file>
+```
+
+3. Runing benchmark (you need both original and reference files). An example
+   using the testings files
+
+```shell
+python distance_benchmark.py \
+    -o ../data/testing_data/output_org_osaka \
+    -r ../data/testing_data/output_ref_osaka
 ```
