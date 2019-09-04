@@ -14,7 +14,7 @@ import verboselogs
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 import traj_dist.distance as tdist
 
 PARAMS = {
@@ -92,7 +92,7 @@ def main():
     """ Run preprocessing
     """
     # init logger
-    logger = verboselogs.VerboseLogger("preproLogger")
+    logger = verboselogs.VerboseLogger("benchLogger")
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.INFO)
 
@@ -112,6 +112,7 @@ def main():
         print("Verbose mode on")
         logger.setLevel(logging.DEBUG)
 
+    logger.info("Benchmark is started !")
     # read data
     ## original data set
     # org_df = pd.read_csv(f"{args.traj_org}/dataframe.csv")
@@ -126,20 +127,25 @@ def main():
     ref_cell_traj_d2 = np.load(f"{args.traj_ref}/cell_traj_d2.npy")
     ref_latlng_traj_d1 = np.load(f"{args.traj_ref}/lat_lng_traj_d1.npy")
     ref_latlng_traj_d2 = np.load(f"{args.traj_ref}/lat_lng_traj_d2.npy")
+    logger.debug("Read numpy arrays (traj)")
 
     # Computing scores
     results = (Parallel(n_jobs=-1)(delayed(tdist_cdist_wrapper)(
         metric, org_latlng_traj_d1, org_latlng_traj_d2,
         ref_latlng_traj_d1, ref_latlng_traj_d2
         ) for metric in PARAMS["dist"]))
+    logger.debug("Lat, Lng parrallell computing done")
 
     results.append(jaccard(org_cell_traj_d1, org_cell_traj_d2,
                            ref_cell_traj_d1, ref_cell_traj_d2))
+    logger.debug("Cells computing done")
 
     # list to dictionary
     for i in range(1, len(results)):
         results[0].update(results[i])
     results = results[0]
+    logger.debug("transform into dic done")
+    logger.info("Computation over")
 
     # saving results
     df_res = pd.DataFrame(results).T
@@ -147,6 +153,7 @@ def main():
     ref_file = args.traj_ref.split("/")[-1]
     os.makedirs(f"../data/output/{org_file}_VS_{ref_file}/", exist_ok=True)
     df_res.to_csv(f"../data/output/{org_file}_VS_{ref_file}/results.csv")
+    logger.info("Saving over")
 
 if __name__ == "__main__":
     main()
