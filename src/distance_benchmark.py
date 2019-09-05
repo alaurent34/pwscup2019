@@ -18,7 +18,7 @@ from joblib import Parallel, delayed
 import traj_dist.distance as tdist
 
 PARAMS = {
-    "dist" : ["sspd", "frechet", "discret_frechet", "hausdorff", "dtw", "lcss", "edr", "erp"]
+    "dist" : ["sspd", "discret_frechet", "hausdorff", "dtw", "lcss", "edr", "erp"] # frechet
         }
 
 def tdist_cdist_wrapper(metric, org_d1, org_d2, ref_d1, ref_d2):
