@@ -69,9 +69,26 @@ def jaccard(org_d1, org_d2, ref_d1, ref_d2):
     :returns: TODO
 
     """
+    # transform to boolean array
+    assert ((org_d1.shape[0] == org_d2.shape[0] and ref_d1.shape[0] == ref_d2.shape[0])
+            and ref_d1.shape[0] == org_d1.shape[0])
+
+    upper_bound = max(org_d1.max(), org_d2.max(), ref_d1.max(), ref_d2.max())
+    shape_b = (org_d1.shape[0], upper_bound+1)
+    org_d1_b = np.zeros(shape_b)
+    org_d2_b = np.zeros(shape_b)
+    ref_d1_b = np.zeros(shape_b)
+    ref_d2_b = np.zeros(shape_b)
+
+    for i in range(shape_b[0]):
+        org_d1_b[i, org_d1[i]] = 1
+        org_d2_b[i, org_d2[i]] = 1
+        ref_d1_b[i, ref_d1[i]] = 1
+        ref_d2_b[i, ref_d2[i]] = 1
+
     # compute pairwise distance
-    cdist_matrix_d1 = cdist(org_d1, ref_d1, metric=jaccard_distance)
-    cdist_matrix_d2 = cdist(org_d2, ref_d2, metric=jaccard_distance)
+    cdist_matrix_d1 = cdist(org_d1, ref_d1, metric="jaccard")
+    cdist_matrix_d2 = cdist(org_d2, ref_d2, metric="jaccard")
     cdist_matrix_d1_d2 = cdist_matrix_d1 + cdist_matrix_d2
 
     # compare minimum with diagonal of matrix
