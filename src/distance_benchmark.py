@@ -21,6 +21,7 @@ PARAMS = {
     "dist" : ["sspd", "discret_frechet", "hausdorff", "dtw", "lcss", "edr", "erp"] # frechet
         }
 
+
 def tdist_cdist_wrapper(metric, org_d1, org_d2, ref_d1, ref_d2):
     """TODO: Docstring for tdist_cdist_wrapper.
     :returns: TODO
@@ -41,9 +42,11 @@ def tdist_cdist_wrapper(metric, org_d1, org_d2, ref_d1, ref_d2):
     min_cdist_m_d2 = cdist_matrix_d2.min(axis=1)
     min_cdist_m_d1_d2 = (cdist_matrix_d1_d2).min(axis=1)
 
-    res_d1 = (np.count_nonzero(cdist_matrix_d1.diagonal == min_cdist_m_d1)/min_cdist_m_d1.shape[0])
-    res_d2 = (np.count_nonzero(cdist_matrix_d2.diagonal == min_cdist_m_d2)/min_cdist_m_d2.shape[0])
-    res_d1_d2 = (np.count_nonzero(cdist_matrix_d1_d2.diagonal == min_cdist_m_d1_d2)
+    res_d1 = (np.count_nonzero(cdist_matrix_d1.diagonal() == min_cdist_m_d1)/
+              min_cdist_m_d1.shape[0])
+    res_d2 = (np.count_nonzero(cdist_matrix_d2.diagonal() == min_cdist_m_d2)/
+              min_cdist_m_d2.shape[0])
+    res_d1_d2 = (np.count_nonzero(cdist_matrix_d1_d2.diagonal() == min_cdist_m_d1_d2)
                  /min_cdist_m_d1_d2.shape[0])
 
     return {metric: {
@@ -76,9 +79,11 @@ def jaccard(org_d1, org_d2, ref_d1, ref_d2):
     min_cdist_m_d2 = cdist_matrix_d2.min(axis=1)
     min_cdist_m_d1_d2 = (cdist_matrix_d1_d2).min(axis=1)
 
-    res_d1 = (np.count_nonzero(cdist_matrix_d1.diagonal == min_cdist_m_d1)/min_cdist_m_d1.shape[0])
-    res_d2 = (np.count_nonzero(cdist_matrix_d2.diagonal == min_cdist_m_d2)/min_cdist_m_d2.shape[0])
-    res_d1_d2 = (np.count_nonzero(cdist_matrix_d1_d2.diagonal == min_cdist_m_d1_d2)
+    res_d1 = (np.count_nonzero(cdist_matrix_d1.diagonal() == min_cdist_m_d1)/
+              min_cdist_m_d1.shape[0])
+    res_d2 = (np.count_nonzero(cdist_matrix_d2.diagonal() == min_cdist_m_d2)/
+              min_cdist_m_d2.shape[0])
+    res_d1_d2 = (np.count_nonzero(cdist_matrix_d1_d2.diagonal() == min_cdist_m_d1_d2)
                  /min_cdist_m_d1_d2.shape[0])
 
     return {"jaccard": {
