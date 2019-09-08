@@ -24,15 +24,21 @@ PARAMS = {
         "lat_lng_dist": ["sspd", "discret_frechet", "hausdorff",
                          "dtw", "lcss", "edr", "erp"], # frechet
 
-        "cell_dist": ["jaccard", "pfipf"]
+        "cell_dist": ["jaccard", "pfipf"],
+
+        "run": "pfipf",
+
+        "alpha": ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9",
+                  "1", "2", "3", "4", "round"]
         }
 
-def evaluate(cdist_matrix_d1, cdist_matrix_d2):
+def evaluate(cdist_matrix_d1, cdist_matrix_d2, cdist_matrix_d1_d2=np.empty(0)):
     """TODO: Docstring for evaluate.
     :returns: TODO
 
     """
-    cdist_matrix_d1_d2 = cdist_matrix_d1 + cdist_matrix_d2
+    if cdist_matrix_d1_d2.shape[0] == 0:
+        cdist_matrix_d1_d2 = cdist_matrix_d1 + cdist_matrix_d2
 
     # compare minimum with diagonal of matrix
     min_cdist_m_d1 = cdist_matrix_d1.min(axis=1)
@@ -58,7 +64,7 @@ def cdist_wrapper(metric, path, l_org_d1, l_org_d2, l_ref_d1, l_ref_d2,
 
     return cell_cdist_wrapper(metric, path, c_org_d1, c_org_d2, c_ref_d1, c_ref_d2)
 
-def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2):
+def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2, alpha=0):
     """TODO: Docstring for function.
 
     :arg1: TODO
@@ -72,29 +78,51 @@ def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2):
     upper_bound = max(org_d1.max(), org_d2.max(), ref_d1.max(), ref_d2.max())
 
     if metric == "jaccard":
+        org_d1d2 = np.concatenate([org_d1, org_d2], axis=1)
+        org_d1d2 = transform_jaccard(org_d1d2, upper_bound, org_d1.shape[0])
         org_d1 = transform_jaccard(org_d1, upper_bound, org_d1.shape[0])
         org_d2 = transform_jaccard(org_d2, upper_bound, org_d1.shape[0])
+        ref_d1d2 = np.concatenate([ref_d1, ref_d2], axis=1)
+        ref_d1d2 = transform_jaccard(ref_d1d2, upper_bound, org_d1.shape[0])
         ref_d1 = transform_jaccard(ref_d1, upper_bound, org_d1.shape[0])
         ref_d2 = transform_jaccard(ref_d2, upper_bound, org_d1.shape[0])
         distance = "jaccard"
     else:
+        org_d1d2 = np.concatenate([org_d1, org_d2], axis=1)
+        org_d1d2 = compute_pfipf(org_d1d2, upper_bound, org_d1.shape[0])
         org_d1 = compute_pfipf(org_d1, upper_bound, org_d1.shape[0])
         org_d2 = compute_pfipf(org_d2, upper_bound, org_d1.shape[0])
+        ref_d1d2 = np.concatenate([ref_d1, ref_d2], axis=1)
+        ref_d1d2 = compute_pfipf(ref_d1d2, upper_bound, org_d1.shape[0])
         ref_d1 = compute_pfipf(ref_d1, upper_bound, org_d1.shape[0])
         ref_d2 = compute_pfipf(ref_d2, upper_bound, org_d1.shape[0])
         distance = "cosine"
 
+    # troncature with alpha
+    if alpha == "round":
+        org_d1d2 = np.round(org_d1d2)
+        ref_d1d2 = np.round(ref_d1d2)
+    else:
+        alpha = float(alpha)
+        org_d1d2[np.nonzero(org_d1d2 > alpha)] = 1
+        # org_d1d2[np.nonzero(org_d1d2 < alpha)] = 0
+        ref_d1d2[np.nonzero(ref_d1d2 > alpha)] = 1
+        # ref_d1d2[np.nonzero(ref_d1d2 < alpha)] = 0
+
     # computing pairwise distance
     cdist_matrix_d1 = cdist(org_d1, ref_d1, metric=distance)
     cdist_matrix_d2 = cdist(org_d2, ref_d2, metric=distance)
+    cdist_matrix_d1_d2 = cdist(org_d1d2, ref_d1d2, metric=distance)
+
 
     # saving
     np.save(f"{path}/{metric}_cdist_matrix_d1.npy", cdist_matrix_d1)
     np.save(f"{path}/{metric}_cdist_matrix_d2.npy", cdist_matrix_d2)
+    np.save(f"{path}/{metric}_cdist_matrix_d1d2_alpha={alpha}.npy", cdist_matrix_d1_d2)
 
-    res_d1, res_d2, res_d1_d2 = evaluate(cdist_matrix_d1, cdist_matrix_d2)
+    res_d1, res_d2, res_d1_d2 = evaluate(cdist_matrix_d1, cdist_matrix_d2, cdist_matrix_d1_d2)
 
-    return {metric: {
+    return {f"{metric}_alpha={alpha}": {
                 "d1": res_d1,
                 "d2": res_d2,
                 "d1_d2": res_d1_d2
@@ -217,6 +245,12 @@ def main():
         org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2
         ) for metric in PARAMS["dist"]))
     logger.debug("Parrallell computing done")
+
+    results += (Parallel(n_jobs=-1)(delayed(cell_cdist_wrapper)(
+        PARAMS["run"], path,
+        org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2,
+        alpha
+        ) for alpha in PARAMS["alpha"]))
 
     # list to dictionary
     for i in range(1, len(results)):
