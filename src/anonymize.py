@@ -73,7 +73,7 @@ def main():
                         type=str, required=True)
     parser.add_argument("-o", "--output", help="Path of the anonymized traj directory",
                         type=str, default=PARAMS["output_path"])
-    parser.add_argument("-t", "--typed", help="Type of file, either IDP or TPR",
+    parser.add_argument("-t", "--type", help="Type of file, either IDP or TPR",
                         type=str, required=True)
     # parser.add_argument("-p", "--pfipf", help="Use pfipf methods", action="store_true")
 
@@ -86,11 +86,15 @@ def main():
     if args.output:
         PARAMS["output_path"] = args.output
 
-    assert (args.type in ["IDP, TPR"]), "-t only take IDP or TPR as value"
-    if args.typed == "IDP":
+    logger.debug(f"agrs.type: {args.type}")
+    assert (args.type in ["IDP", "TPR"]), "-t only take IDP or TPR as value"
+    if args.type == "IDP":
         PARAMS["anon_file_name"] += f"{PARAMS['IDP_num']}_IDP.csv"
     else:
         PARAMS["anon_file_name"] += f"{PARAMS['TRP_num']}_TRP.csv"
+
+    logger.debug(f"output path: {PARAMS['output_path']}")
+    logger.debug(f"name anon file: {PARAMS['anon_file_name']}")
 
     # read the tow days of the trajectory
     o_d1 = np.load(f"{args.input}/cell_traj_d1.npy")
@@ -103,7 +107,7 @@ def main():
     # saving
     os.makedirs(PARAMS["output_path"], exist_ok=True)
     df_ano["reg_id"].to_csv(
-        f"{PARAMS['output_path']}/PARAMS['anon_file_name']",
+        f"{PARAMS['output_path']}/{PARAMS['anon_file_name']}",
         index=False,
         header="reg_id")
 
