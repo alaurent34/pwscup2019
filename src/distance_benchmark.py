@@ -187,7 +187,7 @@ def transform_jaccard(cell_traj, upper_bound, nb_ligne):
     return arr_b
 
 def main():
-    """ Run preprocessing
+    """ Run distane benchmark
     """
     # init logger
     logger = verboselogs.VerboseLogger("benchLogger")
