@@ -73,7 +73,7 @@ def main():
                         type=str, required=True)
     parser.add_argument("-o", "--output", help="Path of the anonymized traj directory",
                         type=str, default=PARAMS["output_path"])
-    parser.add_argument("-t", "--type", help="Type of file, either IDP or TPR",
+    parser.add_argument("-t", "--type", help="Type of file, either IDP or TRP",
                         type=str, required=True)
     # parser.add_argument("-p", "--pfipf", help="Use pfipf methods", action="store_true")
 
@@ -87,7 +87,7 @@ def main():
         PARAMS["output_path"] = args.output
 
     logger.debug(f"agrs.type: {args.type}")
-    assert (args.type in ["IDP", "TPR"]), "-t only take IDP or TPR as value"
+    assert (args.type in ["IDP", "TRP"]), "-t only take IDP or TRP as value"
     if args.type == "IDP":
         PARAMS["anon_file_name"] += f"{PARAMS['IDP_num']}_IDP.csv"
     else:
