@@ -29,7 +29,7 @@ PARAMS = {
         "run": "pfipf",
 
         "alpha": ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9",
-                  "1", "2", "3", "4", "round"]
+                  "1.0", "2.0", "3.0", "4.0", "round", "home"]
         }
 
 def evaluate(cdist_matrix_d1, cdist_matrix_d2, cdist_matrix_d1_d2=np.empty(0)):
@@ -89,11 +89,13 @@ def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2, alpha=0):
         distance = "jaccard"
     else:
         org_d1d2 = np.concatenate([org_d1, org_d2], axis=1)
-        org_d1d2 = compute_pfipf(org_d1d2, upper_bound, org_d1.shape[0])
+        if alpha != "home":
+            org_d1d2 = compute_pfipf(org_d1d2, upper_bound, org_d1.shape[0])
         org_d1 = compute_pfipf(org_d1, upper_bound, org_d1.shape[0])
         org_d2 = compute_pfipf(org_d2, upper_bound, org_d1.shape[0])
         ref_d1d2 = np.concatenate([ref_d1, ref_d2], axis=1)
-        ref_d1d2 = compute_pfipf(ref_d1d2, upper_bound, org_d1.shape[0])
+        if alpha != "home":
+            ref_d1d2 = compute_pfipf(ref_d1d2, upper_bound, org_d1.shape[0])
         ref_d1 = compute_pfipf(ref_d1, upper_bound, org_d1.shape[0])
         ref_d2 = compute_pfipf(ref_d2, upper_bound, org_d1.shape[0])
         distance = "cosine"
@@ -102,6 +104,14 @@ def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2, alpha=0):
     if alpha == "round":
         org_d1d2 = np.round(org_d1d2)
         ref_d1d2 = np.round(ref_d1d2)
+    elif alpha == "home":
+        org_d1d2 = org_d1d2[:, [0, 1, 20, 21]]
+        ref_d1d2 = ref_d1d2[:, [0, 1, 20, 21]]
+        print(org_d1d2)
+        org_d1d2 = compute_pfipf(
+            org_d1d2, max(org_d1d2.max(), ref_d1d2.max()), org_d1d2.shape[0])
+        ref_d1d2 = compute_pfipf(
+            ref_d1d2, max(org_d1d2.max(), ref_d1d2.max()), ref_d1d2.shape[0])
     else:
         alpha = float(alpha)
         org_d1d2[np.nonzero(org_d1d2 > alpha)] = 1
@@ -196,7 +206,7 @@ def main():
 
     # init parser
     parser = argparse.ArgumentParser("This file preprocess data from PWSCup2019")
-    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+    parser.add_argument("-v", "--verbose", help="Increase output verbosity",
                         action="store_true")
     parser.add_argument("-o", "--traj_org", help="Path of the orginal traj directory", type=str,
                         required=True)
@@ -204,6 +214,8 @@ def main():
                         type=str, required=True)
     parser.add_argument("-d", "--distance", help="Distance wich will be computed", default=None,
                         type=str)
+    parser.add_argument("-p", "--allpfipf", help="Compute all alpha_pfipf",
+                        action="store_true")
 
     # recover args
     args = parser.parse_args()
@@ -214,6 +226,7 @@ def main():
     if args.distance:
         PARAMS["dist"] = []
         PARAMS["dist"].append(args.distance)
+    logger.debug(f"distances: {PARAMS['dist']}")
 
     org_file = args.traj_org.split("/")[-1]
     ref_file = args.traj_ref.split("/")[-1]
@@ -244,13 +257,15 @@ def main():
         org_latlng_traj_d1, org_latlng_traj_d2, ref_latlng_traj_d1, ref_latlng_traj_d2,
         org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2
         ) for metric in PARAMS["dist"]))
-    logger.debug("Parrallell computing done")
+    logger.debug("First parrallell computing done")
 
-    results += (Parallel(n_jobs=-1)(delayed(cell_cdist_wrapper)(
-        PARAMS["run"], path,
-        org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2,
-        alpha
-        ) for alpha in PARAMS["alpha"]))
+    if args.allpfipf:
+        results += (Parallel(n_jobs=-1)(delayed(cell_cdist_wrapper)(
+            PARAMS["run"], path,
+            org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2,
+            alpha
+            ) for alpha in PARAMS["alpha"]))
+        logger.debug("Second parrallell computing done")
 
     # list to dictionary
     for i in range(1, len(results)):
