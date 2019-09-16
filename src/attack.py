@@ -56,8 +56,9 @@ def main():
     if args.type == "IDP":
         # Perform PFIPF attack
         file_name = args.traj_ano.split("/")[-2].split("_")
-        file_name[0] = "etable"
-        file_name = "_".join(file_name)
+        file_name[0] = ""
+        file_name[1] = "etable"
+        file_name = "_".join(file_name[1:])
 
         logger.info(f"Attack IDP {file_name}")
 
@@ -91,8 +92,9 @@ def main():
     else:
         # Do nothing
         file_name = args.traj_ano.split("/")[-2].split("_")
-        file_name[0] = "etraces"
-        file_name = "_".join(file_name)
+        file_name[0] = ""
+        file_name[1] = "etraces"
+        file_name = "_".join(file_name[1:])
 
         logger.info(f"Attack TRP {file_name}")
 
