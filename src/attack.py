@@ -58,6 +58,8 @@ def main():
         file_name = args.traj_ano.split("/")[-2].split("_")
         file_name[0] = ""
         file_name[1] = "etable"
+        number = file_name[2][4:]
+        file_name[2] = f"team011-{number}"
         file_name = "_".join(file_name[1:])
 
         logger.info(f"Attack IDP {file_name}")
@@ -94,6 +96,8 @@ def main():
         file_name = args.traj_ano.split("/")[-2].split("_")
         file_name[0] = ""
         file_name[1] = "etraces"
+        number = file_name[2][4:]
+        file_name[2] = f"team011-{number}"
         file_name = "_".join(file_name[1:])
 
         logger.info(f"Attack TRP {file_name}")
