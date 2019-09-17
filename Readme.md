@@ -32,3 +32,16 @@ python distance_benchmark.py \
     -o ../data/testing_data/output_org_osaka \
     -r ../data/testing_data/output_ref_osaka
 ```
+
+### Re-identification
+
+```shell
+cd data/reid_preliminary_phase/
+./prepro.sh /PubData
+./prepro.sh /RefData_000-021
+```
+
+```shell
+cd src/
+./attack.sh ../data/reid_preliminary_phase/prepro
+```
