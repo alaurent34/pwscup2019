@@ -30,19 +30,30 @@ def pfipf_anonymization(traj, alpha=0.3, random=True):
     # compute pfipf matrix
     pfipf_o = compute_pfipf(traj, traj.max(), traj.shape[0])
     # assert that we are not below 0.7 for Utility requirements
-    assert (np.count_nonzero(pfipf_o >= alpha)/2000 >= 0.7), "Utility below 0.7"
+
+    index_to_replace = []
+    for i in range(int(traj.shape[1]/20)):
+        index_to_replace.append(20*i)
+        index_to_replace.append(20*i+1)
 
     # replace all pfipf values above alpha with a random location or -1
+    total_rm = 0
+    total = 0
     traj_anon = traj.copy()
     for i in range(traj_anon.shape[0]):
         for j in range(traj_anon.shape[1]):
             index = traj_anon[i][j]
-            if (pfipf_o[i][index] >= 0.3 or
-                    (j < 2 or (traj_anon.shape[1]/2 <= j < (traj_anon.shape[1]/2) + 2))):
+            if pfipf_o[i][index] >= alpha or j in index_to_replace:
+                total_rm += 1
                 if random:
                     traj_anon[i][j] = np.random.randint(1, 1025)
                 else:
                     traj_anon[i][j] = -1
+            total += 1
+
+    total_rm /= total
+    assert (total_rm <= 0.3), f"Utility below 0.7: {1 - pfpipf_rm} with alpha: {alpha}"
+    print(f"Percentage of value removed by pfipf and home: {total_rm * 100}")
 
     # transform numpy array into original dataframe
     df_ano = pd.DataFrame(traj_anon)
@@ -75,6 +86,8 @@ def main():
                         type=str, default=PARAMS["output_path"])
     parser.add_argument("-t", "--type", help="Type of file, either IDP or TRP",
                         type=str, required=True)
+    parser.add_argument("-a", "--alpha", help="Value of parameters alpha",
+                        type=float, default=0.3)
     # parser.add_argument("-p", "--pfipf", help="Use pfipf methods", action="store_true")
 
     # recover args
@@ -96,13 +109,14 @@ def main():
     logger.debug(f"output path: {PARAMS['output_path']}")
     logger.debug(f"name anon file: {PARAMS['anon_file_name']}")
 
-    # read the tow days of the trajectory
-    o_d1 = np.load(f"{args.input}/cell_traj_d1.npy")
-    o_d2 = np.load(f"{args.input}/cell_traj_d2.npy")
-    o_d1d2 = np.concatenate([o_d1, o_d2], axis=1)
+    # # read the tow days of the trajectory
+    # o_d1 = np.load(f"{args.input}/cell_traj_d1.npy")
+    # o_d2 = np.load(f"{args.input}/cell_traj_d2.npy")
+    # o_d1d2 = np.concatenate([o_d1, o_d2], axis=1)
+    o_total = np.load(f"{args.input}/cell_traj.npy")
 
     # anonymize
-    df_ano = pfipf_anonymization(o_d1d2)
+    df_ano = pfipf_anonymization(o_total, alpha=args.alpha)
 
     # saving
     os.makedirs(PARAMS["output_path"], exist_ok=True)
