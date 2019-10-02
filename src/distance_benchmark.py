@@ -28,43 +28,33 @@ PARAMS = {
 
         "run": "pfipf",
 
-        "alpha": ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9",
-                  "1.0", "2.0", "3.0", "4.0", "round", "home"]
+        "alpha": ["0.05", "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8",
+                  "0.9", "1.0", "2.0", "3.0", "4.0", "round", "home"]
         }
 
-def evaluate(cdist_matrix_d1, cdist_matrix_d2, cdist_matrix_d1_d2=np.empty(0)):
+def evaluate(cdist_matrix):
     """TODO: Docstring for evaluate.
     :returns: TODO
 
     """
-    if cdist_matrix_d1_d2.shape[0] == 0:
-        cdist_matrix_d1_d2 = cdist_matrix_d1 + cdist_matrix_d2
-
     # compare minimum with diagonal of matrix
-    min_cdist_m_d1 = cdist_matrix_d1.min(axis=1)
-    min_cdist_m_d2 = cdist_matrix_d2.min(axis=1)
-    min_cdist_m_d1_d2 = (cdist_matrix_d1_d2).min(axis=1)
+    min_cdist_m = cdist_matrix.min(axis=1)
 
-    res_d1 = (np.count_nonzero(cdist_matrix_d1.diagonal() == min_cdist_m_d1)/
-              min_cdist_m_d1.shape[0])
-    res_d2 = (np.count_nonzero(cdist_matrix_d2.diagonal() == min_cdist_m_d2)/
-              min_cdist_m_d2.shape[0])
-    res_d1_d2 = (np.count_nonzero(cdist_matrix_d1_d2.diagonal() == min_cdist_m_d1_d2)
-                 /min_cdist_m_d1_d2.shape[0])
+    res = (np.count_nonzero(cdist_matrix.diagonal() == min_cdist_m)/
+           min_cdist_m.shape[0])
 
-    return res_d1, res_d2, res_d1_d2
+    return res
 
-def cdist_wrapper(metric, path, l_org_d1, l_org_d2, l_ref_d1, l_ref_d2,
-                  c_org_d1, c_org_d2, c_ref_d1, c_ref_d2):
+def cdist_wrapper(metric, path, l_org, l_ref, c_org, c_ref):
     """
     doc
     """
     if metric in PARAMS["lat_lng_dist"]:
-        return latlng_cdist_wrapper(metric, path, l_org_d1, l_org_d2, l_ref_d1, l_ref_d2)
+        return latlng_cdist_wrapper(metric, path, l_org, l_ref)
 
-    return cell_cdist_wrapper(metric, path, c_org_d1, c_org_d2, c_ref_d1, c_ref_d2)
+    return cell_cdist_wrapper(metric, path, c_org, c_ref)
 
-def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2, alpha=0):
+def cell_cdist_wrapper(metric, path, org, ref, alpha=0):
     """TODO: Docstring for function.
 
     :arg1: TODO
@@ -72,96 +62,78 @@ def cell_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2, alpha=0):
 
     """
     # preprocess
-    assert ((org_d1.shape == org_d2.shape and ref_d1.shape == ref_d2.shape)
-            and ref_d1.shape == org_d1.shape)
+    assert ref.shape == org.shape
 
-    upper_bound = max(org_d1.max(), org_d2.max(), ref_d1.max(), ref_d2.max())
+    upper_bound = max(org.max(), ref.max())
 
     if metric == "jaccard":
-        org_d1d2 = np.concatenate([org_d1, org_d2], axis=1)
-        org_d1d2 = transform_jaccard(org_d1d2, upper_bound, org_d1.shape[0])
-        org_d1 = transform_jaccard(org_d1, upper_bound, org_d1.shape[0])
-        org_d2 = transform_jaccard(org_d2, upper_bound, org_d1.shape[0])
-        ref_d1d2 = np.concatenate([ref_d1, ref_d2], axis=1)
-        ref_d1d2 = transform_jaccard(ref_d1d2, upper_bound, org_d1.shape[0])
-        ref_d1 = transform_jaccard(ref_d1, upper_bound, org_d1.shape[0])
-        ref_d2 = transform_jaccard(ref_d2, upper_bound, org_d1.shape[0])
+        org = transform_jaccard(org, upper_bound, org.shape[0])
+        ref = transform_jaccard(ref, upper_bound, ref.shape[0])
         distance = "jaccard"
     else:
-        org_d1d2 = np.concatenate([org_d1, org_d2], axis=1)
         if alpha != "home":
-            org_d1d2 = compute_pfipf(org_d1d2, upper_bound, org_d1.shape[0])
-        org_d1 = compute_pfipf(org_d1, upper_bound, org_d1.shape[0])
-        org_d2 = compute_pfipf(org_d2, upper_bound, org_d1.shape[0])
-        ref_d1d2 = np.concatenate([ref_d1, ref_d2], axis=1)
-        if alpha != "home":
-            ref_d1d2 = compute_pfipf(ref_d1d2, upper_bound, org_d1.shape[0])
-        ref_d1 = compute_pfipf(ref_d1, upper_bound, org_d1.shape[0])
-        ref_d2 = compute_pfipf(ref_d2, upper_bound, org_d1.shape[0])
+            org = compute_pfipf(org, upper_bound, org.shape[0])
+            ref = compute_pfipf(ref, upper_bound, org.shape[0])
         distance = "cosine"
 
     # troncature with alpha
     if alpha == "round":
-        org_d1d2 = np.round(org_d1d2)
-        ref_d1d2 = np.round(ref_d1d2)
+        org = np.round(org)
+        ref = np.round(ref)
     elif alpha == "home":
-        org_d1d2 = org_d1d2[:, [0, 1, 20, 21]]
-        ref_d1d2 = ref_d1d2[:, [0, 1, 20, 21]]
-        print(org_d1d2)
-        org_d1d2 = compute_pfipf(
-            org_d1d2, max(org_d1d2.max(), ref_d1d2.max()), org_d1d2.shape[0])
-        ref_d1d2 = compute_pfipf(
-            ref_d1d2, max(org_d1d2.max(), ref_d1d2.max()), ref_d1d2.shape[0])
+        index_to_replace = []
+        for i in range(int(org.shape[1]/20)):
+            index_to_replace.append(20*i)
+            index_to_replace.append(20*i+1)
+
+        org = org[:, index_to_replace]
+        ref = ref[:, index_to_replace]
+        print(org)
+        org = compute_pfipf(
+            org, max(org.max(), ref.max()), org.shape[0])
+        ref = compute_pfipf(
+            ref, max(org.max(), ref.max()), ref.shape[0])
     else:
         alpha = float(alpha)
-        org_d1d2[np.nonzero(org_d1d2 > alpha)] = 1
+        org[np.nonzero(org > alpha)] = 1
         # org_d1d2[np.nonzero(org_d1d2 < alpha)] = 0
-        ref_d1d2[np.nonzero(ref_d1d2 > alpha)] = 1
+        ref[np.nonzero(ref > alpha)] = 1
         # ref_d1d2[np.nonzero(ref_d1d2 < alpha)] = 0
 
     # computing pairwise distance
-    cdist_matrix_d1 = cdist(org_d1, ref_d1, metric=distance)
-    cdist_matrix_d2 = cdist(org_d2, ref_d2, metric=distance)
-    cdist_matrix_d1_d2 = cdist(org_d1d2, ref_d1d2, metric=distance)
+    cdist_matrix = cdist(org, ref, metric=distance)
 
 
     # saving
-    np.save(f"{path}/{metric}_cdist_matrix_d1.npy", cdist_matrix_d1)
-    np.save(f"{path}/{metric}_cdist_matrix_d2.npy", cdist_matrix_d2)
-    np.save(f"{path}/{metric}_cdist_matrix_d1d2_alpha={alpha}.npy", cdist_matrix_d1_d2)
+    # np.save(f"{path}/{metric}_cdist_matrix_d1.npy", cdist_matrix_d1)
+    # np.save(f"{path}/{metric}_cdist_matrix_d2.npy", cdist_matrix_d2)
+    np.save(f"{path}/{metric}_cdist_matrix_d1d2_alpha={alpha}.npy", cdist_matrix)
 
-    res_d1, res_d2, res_d1_d2 = evaluate(cdist_matrix_d1, cdist_matrix_d2, cdist_matrix_d1_d2)
+    res = evaluate(cdist_matrix)
 
     return {f"{metric}_alpha={alpha}": {
-                "d1": res_d1,
-                "d2": res_d2,
-                "d1_d2": res_d1_d2
+                "all": res,
                 }
             }
 
-def latlng_cdist_wrapper(metric, path, org_d1, org_d2, ref_d1, ref_d2):
+def latlng_cdist_wrapper(metric, path, org, ref):
     """TODO: Docstring for latlng_cdist_wrapper.
     :returns: TODO
 
     """
     # compute pairwise distance
     if not (metric in ["frechet", "discret_frechet"]):
-        cdist_matrix_d1 = tdist.cdist(org_d1, ref_d1, metric=metric, type_d="spherical")
-        cdist_matrix_d2 = tdist.cdist(org_d2, ref_d2, metric=metric, type_d="spherical")
+        cdist_matrix = tdist.cdist(org, ref, metric=metric, type_d="spherical")
     else:
-        cdist_matrix_d1 = tdist.cdist(org_d1, ref_d1, metric=metric, type_d="euclidean")
-        cdist_matrix_d2 = tdist.cdist(org_d2, ref_d2, metric=metric, type_d="euclidean")
+        cdist_matrix = tdist.cdist(org, ref, metric=metric, type_d="euclidean")
 
     # saving
-    np.save(f"{path}/{metric}_cdist_matrix_d1.npy", cdist_matrix_d1)
-    np.save(f"{path}/{metric}_cdist_matrix_d2.npy", cdist_matrix_d2)
+    np.save(f"{path}/{metric}_cdist_matrix.npy", cdist_matrix)
 
-    res_d1, res_d2, res_d1_d2 = evaluate(cdist_matrix_d1, cdist_matrix_d2)
+    res = evaluate(cdist_matrix)
 
     return {metric: {
-                "d1": res_d1,
-                "d2": res_d2,
-                "d1_d2": res_d1_d2
+                "all": res,
                 }
             }
 
@@ -238,31 +210,35 @@ def main():
     # read data
     ## original data set
     # org_df = pd.read_csv(f"{args.traj_org}/dataframe.csv")
-    org_cell_traj_d1 = np.load(f"{args.traj_org}/cell_traj_d1.npy")
-    org_cell_traj_d2 = np.load(f"{args.traj_org}/cell_traj_d2.npy")
-    org_latlng_traj_d1 = np.load(f"{args.traj_org}/lat_lng_traj_d1.npy")
-    org_latlng_traj_d2 = np.load(f"{args.traj_org}/lat_lng_traj_d2.npy")
+    # org_cell_traj_d1 = np.load(f"{args.traj_org}/cell_traj_d1.npy")
+    # org_cell_traj_d2 = np.load(f"{args.traj_org}/cell_traj_d2.npy")
+    # org_latlng_traj_d1 = np.load(f"{args.traj_org}/lat_lng_traj_d1.npy")
+    # org_latlng_traj_d2 = np.load(f"{args.traj_org}/lat_lng_traj_d2.npy")
+    org_latlng_traj = np.load(f"{args.traj_org}/lat_lng_traj.npy")
+    org_cell_traj = np.load(f"{args.traj_org}/cell_traj.npy")
 
     ## reference data set
     # ref_df = pd.read_csv(f"{args.traj_ref}/dataframe.csv")
-    ref_cell_traj_d1 = np.load(f"{args.traj_ref}/cell_traj_d1.npy")
-    ref_cell_traj_d2 = np.load(f"{args.traj_ref}/cell_traj_d2.npy")
-    ref_latlng_traj_d1 = np.load(f"{args.traj_ref}/lat_lng_traj_d1.npy")
-    ref_latlng_traj_d2 = np.load(f"{args.traj_ref}/lat_lng_traj_d2.npy")
+    # ref_cell_traj_d1 = np.load(f"{args.traj_ref}/cell_traj_d1.npy")
+    # ref_cell_traj_d2 = np.load(f"{args.traj_ref}/cell_traj_d2.npy")
+    # ref_latlng_traj_d1 = np.load(f"{args.traj_ref}/lat_lng_traj_d1.npy")
+    # ref_latlng_traj_d2 = np.load(f"{args.traj_ref}/lat_lng_traj_d2.npy")
+    ref_latlng_traj = np.load(f"{args.traj_ref}/lat_lng_traj.npy")
+    ref_cell_traj = np.load(f"{args.traj_ref}/cell_traj.npy")
     logger.debug("Read numpy arrays (traj)")
 
     # Computing scores
     results = (Parallel(n_jobs=-1)(delayed(cdist_wrapper)(
         metric, path,
-        org_latlng_traj_d1, org_latlng_traj_d2, ref_latlng_traj_d1, ref_latlng_traj_d2,
-        org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2
+        org_latlng_traj, ref_latlng_traj,
+        org_cell_traj, ref_cell_traj
         ) for metric in PARAMS["dist"]))
     logger.debug("First parrallell computing done")
 
     if args.allpfipf:
         results += (Parallel(n_jobs=-1)(delayed(cell_cdist_wrapper)(
             PARAMS["run"], path,
-            org_cell_traj_d1, org_cell_traj_d2, ref_cell_traj_d1, ref_cell_traj_d2,
+            org_cell_traj, ref_cell_traj,
             alpha
             ) for alpha in PARAMS["alpha"]))
         logger.debug("Second parrallell computing done")
