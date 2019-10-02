@@ -18,7 +18,7 @@ import os
 # Number of users
 UserNum = 2000
 # length of each trace
-T = 40
+T = 400
 
 #sys.argv = ["ShuffleIDs.py", "../Data_Anonymize", "../Data_Anonymize_Shuffle"]
 if len(sys.argv) < 3:

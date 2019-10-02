@@ -14,6 +14,11 @@ In this directory, you can find PWS Cup 2019 open information (ref Section 2.7 i
   - PWSCup2019_Tokyo_Preliminary/        Region and time assignment to be used in the preliminary round
     - info_region.csv                      Region assignment file (refer Section 2.7.5 in the contest rule paper)
     - info_time.csv                        Time assignment file (refer Section 2.7.6 in the contest rule paper)
+    - orgtraces_team022_dataYY_ZZZ.csv     Original trace for comparison【refer 2.7.8 in the contest rule】
+    - reftraces_team022_dataYY_ZZZ.csv     Reference trace for comparison【refer 2.7.8 in the contest rule】
+    - orgtraces_team023_dataYY_ZZZ.csv     Original trace for comparison【refer 2.7.8 in the contest rule】
+    - reftraces_team023_dataYY_ZZZ.csv     Reference trace for comparison【refer 2.7.8 in the contest rule】
+
 
 - Data_Anonymize/                      Anonymized trace set (before shuffling)
 
