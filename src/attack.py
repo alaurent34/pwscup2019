@@ -15,6 +15,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 from distance_benchmark import compute_pfipf
+from distance_benchmark import transform_jaccard
 
 def main():
     """ Run distane benchmark
@@ -41,7 +42,9 @@ def main():
     parser.add_argument("-t", "--type", help="Type of attack either IDP or TRP",
                         type=str, required=True)
     parser.add_argument("-a", "--alpha", help="Alpha value",
-                        type=str, default=1)
+                        type=str, default=10)
+    parser.add_argument("-j", "--jaccard", help="Use Jaccard instead of pf-ipf",
+                        action="store_true")
 
     # recover args
     args = parser.parse_args()
@@ -65,25 +68,27 @@ def main():
         logger.info(f"Attack IDP {file_name}")
 
         # Read files
-        cell_ano = np.concatenate([
-            np.load(f"{args.traj_ano}/cell_traj_d1.npy"),
-            np.load(f"{args.traj_ano}/cell_traj_d2.npy")
-            ], axis=1)
-        cell_ref = np.concatenate([
-            np.load(f"{args.traj_ref}/cell_traj_d1.npy"),
-            np.load(f"{args.traj_ref}/cell_traj_d2.npy")
-            ], axis=1)
+        cell_ano = np.load(f"{args.traj_ano}/cell_traj.npy")
+        cell_ref = np.load(f"{args.traj_ref}/cell_traj.npy")
 
-        # Compute pfipf
-        pfipf_reg_ano = compute_pfipf(cell_ano, 1024, 2000)
-        pfipf_reg_ref = compute_pfipf(cell_ref, 1024, 2000)
+        if not args.jaccard:
+            # Compute pfipf
+            pfipf_reg_ano = compute_pfipf(cell_ano, 1024, 2000)
+            pfipf_reg_ref = compute_pfipf(cell_ref, 1024, 2000)
 
-        # alpha processing
-        pfipf_reg_ano[pfipf_reg_ano >= 1] = 1
-        pfipf_reg_ref[pfipf_reg_ref >= 1] = 1
+            # alpha processing
+            pfipf_reg_ano[pfipf_reg_ano >= 1] = 1
+            pfipf_reg_ref[pfipf_reg_ref >= 1] = 1
 
-        #distance computing
-        versus = cdist(pfipf_reg_ano, pfipf_reg_ref, metric="cosine")
+            #distance computing
+            versus = cdist(pfipf_reg_ano, pfipf_reg_ref, metric="cosine")
+
+        else:
+            # Compute Jaccard
+            jaccard_reg_ano = transform_jaccard(cell_ano, 1024, 2000)
+            jaccard_reg_ref = transform_jaccard(cell_ref, 1024, 2000)
+
+            versus = cdist(jaccard_reg_ano, jaccard_reg_ref, metric="jaccard")
 
         #Argmin selection
         df = pd.DataFrame(versus.argmin(axis=1)+1, columns=["user_id"])
