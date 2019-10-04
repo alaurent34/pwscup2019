@@ -42,7 +42,7 @@ def main():
     parser.add_argument("-t", "--type", help="Type of attack either IDP or TRP",
                         type=str, required=True)
     parser.add_argument("-a", "--alpha", help="Alpha value",
-                        type=str, default=10)
+                        type=int, default=10)
     parser.add_argument("-j", "--jaccard", help="Use Jaccard instead of pf-ipf",
                         action="store_true")
 
@@ -77,8 +77,8 @@ def main():
             pfipf_reg_ref = compute_pfipf(cell_ref, 1024, 2000)
 
             # alpha processing
-            pfipf_reg_ano[pfipf_reg_ano >= 1] = 1
-            pfipf_reg_ref[pfipf_reg_ref >= 1] = 1
+            pfipf_reg_ano[pfipf_reg_ano >= args.alpha] = 1
+            pfipf_reg_ref[pfipf_reg_ref >= args.alpha] = 1
 
             #distance computing
             versus = cdist(pfipf_reg_ano, pfipf_reg_ref, metric="cosine")
