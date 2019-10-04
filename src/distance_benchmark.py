@@ -96,17 +96,13 @@ def cell_cdist_wrapper(metric, path, org, ref, alpha=0):
     else:
         alpha = float(alpha)
         org[np.nonzero(org > alpha)] = 1
-        # org_d1d2[np.nonzero(org_d1d2 < alpha)] = 0
         ref[np.nonzero(ref > alpha)] = 1
-        # ref_d1d2[np.nonzero(ref_d1d2 < alpha)] = 0
 
     # computing pairwise distance
     cdist_matrix = cdist(org, ref, metric=distance)
 
 
     # saving
-    # np.save(f"{path}/{metric}_cdist_matrix_d1.npy", cdist_matrix_d1)
-    # np.save(f"{path}/{metric}_cdist_matrix_d2.npy", cdist_matrix_d2)
     np.save(f"{path}/{metric}_cdist_matrix_d1d2_alpha={alpha}.npy", cdist_matrix)
 
     res = evaluate(cdist_matrix)
@@ -209,20 +205,10 @@ def main():
 
     # read data
     ## original data set
-    # org_df = pd.read_csv(f"{args.traj_org}/dataframe.csv")
-    # org_cell_traj_d1 = np.load(f"{args.traj_org}/cell_traj_d1.npy")
-    # org_cell_traj_d2 = np.load(f"{args.traj_org}/cell_traj_d2.npy")
-    # org_latlng_traj_d1 = np.load(f"{args.traj_org}/lat_lng_traj_d1.npy")
-    # org_latlng_traj_d2 = np.load(f"{args.traj_org}/lat_lng_traj_d2.npy")
     org_latlng_traj = np.load(f"{args.traj_org}/lat_lng_traj.npy")
     org_cell_traj = np.load(f"{args.traj_org}/cell_traj.npy")
 
     ## reference data set
-    # ref_df = pd.read_csv(f"{args.traj_ref}/dataframe.csv")
-    # ref_cell_traj_d1 = np.load(f"{args.traj_ref}/cell_traj_d1.npy")
-    # ref_cell_traj_d2 = np.load(f"{args.traj_ref}/cell_traj_d2.npy")
-    # ref_latlng_traj_d1 = np.load(f"{args.traj_ref}/lat_lng_traj_d1.npy")
-    # ref_latlng_traj_d2 = np.load(f"{args.traj_ref}/lat_lng_traj_d2.npy")
     ref_latlng_traj = np.load(f"{args.traj_ref}/lat_lng_traj.npy")
     ref_cell_traj = np.load(f"{args.traj_ref}/cell_traj.npy")
     logger.debug("Read numpy arrays (traj)")
