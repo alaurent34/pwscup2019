@@ -67,8 +67,6 @@ def main():
                         action="store_true")
     parser.add_argument("-i", "--input", help="Path of the input file", type=str,
                         required=True)
-    parser.add_argument("-r", "--region", default="OrgData(Anony-Pre)_011/info_region.csv",
-                        help="Path of file which represent regions", type=str)
     parser.add_argument("-o", "--output", help="Path for the output files (directory)", type=str,
                         required=True)
 
