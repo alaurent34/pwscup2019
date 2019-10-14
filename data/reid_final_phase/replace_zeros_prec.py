@@ -56,6 +56,7 @@ def replace_zero(array_traj):
             array_traj[user][begin:end] = val
 
             i = end
+    return array_traj
 
 @njit
 def find_next_zero(i, array):

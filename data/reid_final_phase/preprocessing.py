@@ -83,18 +83,21 @@ def main():
 
     # expand generalized trajectories
     expended = False
-    if type(df_traj.reg_id.dtype != int):     #####
+    if df_traj.reg_id.dtype != int:     #####
         expended = True
-        df_traj = explode(df_traj, 'reg_id')     #####
-        df_traj.reg_id.replace('*', '0', inplace=True)     #####     #####
-        df_traj.reg_id = df_traj.reg_id.astype(int)     #####
+        df_traj_exp = df_traj.copy()
+        df_traj_exp = explode(df_traj_exp, 'reg_id')     #####
+        df_traj_exp.reg_id.replace('*', '0', inplace=True)     #####     #####
+        df_traj_exp.reg_id = df_traj_exp.reg_id.astype(int)     #####
 
 
     # recover trajectories as cells
     if expended:
-        cell_traj = df_traj.groupby(["pse_id", "time_id"])["reg_id"]\
-                .apply(np.array).unstack().values     #####
+        logger.debug("Traj Expended")
+        cell_traj = df_traj_exp.groupby(["pse_id", "time_id"])["reg_id"]\
+                .agg("max").values.reshape(2000, 400).astype(int)
     else:
+        logger.debug("Traj not Expended")
         cell_traj = df_traj_to_np(df_traj)
     logger.debug("Cells trajectories extracted")
 
@@ -103,11 +106,11 @@ def main():
     df_traj = np_to_df_traj(cell_traj, df_traj)
 
     # save numpy array
+    os.makedirs(args.output, exist_ok=True)
     np.save(arr=cell_traj, file=f"{args.output}/cell_traj.npy")
     logger.info("Cells trajectories saved")
 
     # save dataframe file
-    os.makedirs(args.output, exist_ok=True)
     df_traj.to_csv(f"{args.output}/dataframe.csv", index=False)
     logger.info("DataFrame merged saved")
 
