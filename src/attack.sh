@@ -17,7 +17,6 @@ do
         REF_PATH="$DIR/prepro_reftraces_${ftype[-3]}_${ftype[-2]}_${ftype[-1]}"
         ANO_PATH="$file/"
 
-        python attack.py -o $ANO_PATH -r $REF_PATH -t IDP
-        python attack.py -o $ANO_PATH -r $REF_PATH -t TRP
+        python attack.py -o $ANO_PATH -r $REF_PATH -j -s 2
     fi
 done
